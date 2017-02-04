@@ -29,6 +29,14 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         [DebuggerStepThrough]
+        public static string ShortName([NotNull] this IEntityType type)
+            => ((ITypeBase)type).DisplayName();
+
+        /// <summary>
+        ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
+        ///     directly from your code. This API may change or be removed in future releases.
+        /// </summary>
+        [DebuggerStepThrough]
         public static string DisplayName([NotNull] this IEntityType type)
         {
             if (type.ClrType == null)
@@ -109,13 +117,6 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Internal
         /// </summary>
         public static IEnumerable<IEntityType> GetDerivedTypesInclusive([NotNull] this IEntityType entityType)
             => new[] { entityType }.Concat(entityType.GetDerivedTypes());
-
-        /// <summary>
-        ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        public static bool IsOwned([NotNull] this IEntityType entityType)
-            => entityType.HasDelegatedIdentity() && entityType.GetForeignKeys().Any(fk => fk.IsOwnership);
 
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
