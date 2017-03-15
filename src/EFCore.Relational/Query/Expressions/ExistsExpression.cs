@@ -80,5 +80,37 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
                 ? new ExistsExpression(expression)
                 : this;
         }
+
+        /// <summary>
+        ///     Tests if this object is considered equal to another.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current object. </param>
+        /// <returns>
+        ///     true if the objects are considered equal, false if they are not.
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return obj.GetType() == GetType() && Equals((ExistsExpression)obj);
+        }
+
+        private bool Equals(ExistsExpression other) => Equals(Expression, other.Expression);
+
+        /// <summary>
+        ///     Returns a hash code for this object.
+        /// </summary>
+        /// <returns>
+        ///     A hash code for this object.
+        /// </returns>
+        public override int GetHashCode() => Expression.GetHashCode();
     }
 }
