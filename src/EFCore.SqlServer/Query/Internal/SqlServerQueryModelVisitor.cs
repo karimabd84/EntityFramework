@@ -93,16 +93,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
 
                 foreach (var projection in subQuery.Projection)
                 {
-                    var columnReference = projection.LiftExpressionFromSubquery(subQuery);
-
-                    if (columnReference != null)
-                    {
-                        selectExpression.AddToProjection(columnReference);
-                    }
-                    else
-                    {
-                        throw new Exception("Subquery should not have any other type of expression.");
-                    }
+                    selectExpression.AddToProjection(projection.LiftExpressionFromSubquery(subQuery));
                 }
 
                 if (subQuery.OrderBy.Count == 0)

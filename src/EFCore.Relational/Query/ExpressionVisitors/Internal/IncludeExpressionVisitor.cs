@@ -484,13 +484,10 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
             foreach (var ordering in orderings)
             {
-                var orderingExpression = ordering.Expression;
-
-                var projection = innerJoinSelectExpression.Projection[innerJoinSelectExpression.AddToProjection(orderingExpression)];
-
-                var newExpression = projection.LiftExpressionFromSubquery(innerJoinExpression);
-
-                targetSelectExpression.AddToOrderBy(new Ordering(newExpression, ordering.OrderingDirection));
+                targetSelectExpression.AddToOrderBy(
+                    new Ordering(
+                        innerJoinSelectExpression.Projection[innerJoinSelectExpression.AddToProjection(ordering.Expression)]
+                            .LiftExpressionFromSubquery(innerJoinExpression), ordering.OrderingDirection));
             }
 
             if (innerJoinSelectExpression.Limit == null

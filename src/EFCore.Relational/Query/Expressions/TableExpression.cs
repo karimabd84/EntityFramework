@@ -91,7 +91,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
         private bool Equals(TableExpression other)
             => string.Equals(Table, other.Table)
                && string.Equals(Schema, other.Schema)
-               && base.Equals(other);
+               && string.Equals(Alias, other.Alias)
+               && Equals(QuerySource, other.QuerySource);
 
         /// <summary>
         ///     Returns a hash code for this object.
@@ -103,7 +104,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
         {
             unchecked
             {
-                var hashCode = base.GetHashCode();
+                var hashCode = Alias?.GetHashCode() ?? 0;
+                hashCode = (hashCode * 397) ^ (QuerySource?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ Table.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Schema?.GetHashCode() ?? 0);
 

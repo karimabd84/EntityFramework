@@ -372,7 +372,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
             foreach (var expression in _projection)
             {
                 var expressionToAdd = expression;
-                var memberInfo = _memberInfoProjectionMapping.FirstOrDefault(kvp => ExpressionEqualityComparer.Equals(kvp.Value, expression)).Key;
+
                 if (expressionToAdd is AliasExpression aliasExpression)
                 {
                     expressionToAdd = new AliasExpression(subquery.CreateUniqueProjectionAlias(aliasExpression.Alias, useColumnAliasPrefix: true), aliasExpression.Expression);
@@ -399,6 +399,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
                 {
                     expressionToAdd = new AliasExpression(subquery.CreateUniqueProjectionAlias(ColumnAliasPrefix), expression);
                 }
+
+                var memberInfo = _memberInfoProjectionMapping.FirstOrDefault(kvp => ExpressionEqualityComparer.Equals(kvp.Value, expression)).Key;
 
                 if (memberInfo != null)
                 {
@@ -496,29 +498,17 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
 
             var table = GetTableForQuerySource(querySource);
 
-            Expression projectionToSearch;
             if (table is JoinExpressionBase joinTable)
             {
                 table = joinTable.TableExpression;
             }
 
-            if (table is SelectExpression subquerySelectExpression)
-            {
-                if (subquerySelectExpression.IsProjectStar)
-                {
-                    var boundExpression = subquerySelectExpression.BindPropertyToSelectExpression(property, querySource);
-                    projectionToSearch = boundExpression.LiftExpressionFromSubquery(table);
-                }
-                else
-                {
-                    var subQueryProjection = subquerySelectExpression.Projection[subquerySelectExpression.GetProjectionIndex(property, querySource)];
-                    projectionToSearch = subQueryProjection.LiftExpressionFromSubquery(table);
-                }
-            }
-            else
-            {
-                projectionToSearch = new ColumnExpression(_relationalAnnotationProvider.For(property).ColumnName, property, table);
-            }
+            var projectionToSearch = table is SelectExpression subquerySelectExpression
+                ? (Expression)(subquerySelectExpression.IsProjectStar
+                    ? subquerySelectExpression.BindPropertyToSelectExpression(property, querySource)
+                    : subquerySelectExpression.Projection[subquerySelectExpression.GetProjectionIndex(property, querySource)])
+                .LiftExpressionFromSubquery(table)
+                : new ColumnExpression(_relationalAnnotationProvider.For(property).ColumnName, property, table);
 
             return IsProjectStar
                 ? ProjectStarExpression.GetOrAdd(projectionToSearch)
@@ -722,15 +712,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
 
                 foreach (var projection in subquery._projection)
                 {
-                    var columnReference = projection.LiftExpressionFromSubquery(subquery);
-                    if (columnReference != null)
-                    {
-                        _projection.Add(columnReference);
-                    }
-                    else
-                    {
-                        throw new Exception("Subquery should not have this kind of expression.");
-                    }
+                    _projection.Add(projection.LiftExpressionFromSubquery(subquery));
                 }
 
                 IsProjectStar = false;
@@ -1081,29 +1063,17 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions
             Check.NotNull(property, nameof(property));
             Check.NotNull(querySource, nameof(querySource));
 
-            Expression projectionToSearch;
             if (table is JoinExpressionBase joinTable)
             {
                 table = joinTable.TableExpression;
             }
 
-            if (table is SelectExpression subquerySelectExpression)
-            {
-                if (subquerySelectExpression.IsProjectStar)
-                {
-                    var boundExpression = subquerySelectExpression.BindPropertyToSelectExpression(property, querySource);
-                    projectionToSearch = boundExpression.LiftExpressionFromSubquery(table);
-                }
-                else
-                {
-                    var subQueryProjection = subquerySelectExpression.Projection[subquerySelectExpression.GetProjectionIndex(property, querySource)];
-                    projectionToSearch = subQueryProjection.LiftExpressionFromSubquery(table);
-                }
-            }
-            else
-            {
-                projectionToSearch = new ColumnExpression(_relationalAnnotationProvider.For(property).ColumnName, property, table);
-            }
+            var projectionToSearch = table is SelectExpression subquerySelectExpression
+                ? (Expression)(subquerySelectExpression.IsProjectStar
+                    ? subquerySelectExpression.BindPropertyToSelectExpression(property, querySource)
+                    : subquerySelectExpression.Projection[subquerySelectExpression.GetProjectionIndex(property, querySource)])
+                .LiftExpressionFromSubquery(table)
+                : new ColumnExpression(_relationalAnnotationProvider.For(property).ColumnName, property, table);
 
             return IsProjectStar
                 ? ProjectStarExpression.GetOrAdd(projectionToSearch)
